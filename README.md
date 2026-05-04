@@ -200,11 +200,30 @@ Base path: **`/api`**
 
 ## Deploy (Railway)
 
+### If the container crashes with `Missing MONGODB_URI` / database URI
+
+That means **`process.env` has no Mongo connection string in production**. Your **`backend/.env` file is not inside the Docker image** (by design — `.dockerignore` blocks `.env` so secrets never leak in the image).
+
+**Fix:** In Railway → your **web/API service** → **Variables**, add:
+
+| Variable | Required? | What to put |
+|----------|-------------|-------------|
+| **`MONGODB_URI`** | **Yes** | Full URI from **MongoDB Atlas** or from a **Railway MongoDB** service (use “Variable Reference” if Railway linked it under another name — you can paste the same URI string here). |
+| **`JWT_SECRET`** | **Yes** | Long random string (signing tokens). |
+| **`CLIENT_URL`** | **Yes** for CORS | Your app’s public URL, e.g. `https://your-service.up.railway.app` (same as the URL you open in the browser). |
+| **`PORT`** | Usually no | Railway sets this; the app reads `process.env.PORT`. |
+
+The code also accepts **`MONGO_URL`** if your template only provides that name — prefer **`MONGODB_URI`** for clarity.
+
+Redeploy after saving variables.
+
+---
+
 **Option A — Dockerfile (recommended)**
 
-1. MongoDB (Railway plugin or Atlas) → copy `MONGODB_URI`.
-2. New service from this repo; use repo **`Dockerfile`**.
-3. Set env: `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL` (your `https://…railway.app`), `PORT` if needed.
+1. Provision **MongoDB** (Railway Mongo plugin or **MongoDB Atlas**).
+2. Create a service from this repo; build with the repo **`Dockerfile`**.
+3. Set the variables in the table above on that service (not only on the Mongo service — the **Node app** must receive `MONGODB_URI`).
 4. Start command is already **`node backend/src/server.js`** (see `Dockerfile`).
 
 **Option B — Nixpacks**
