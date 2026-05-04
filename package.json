@@ -1,0 +1,14 @@
+{
+  "name": "team-task-manager",
+  "private": true,
+  "description": "Full-stack task manager — backend (Express API) + frontend (React SPA)",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "setup": "(cd backend && npm install) && (cd frontend && npm install)",
+    "build": "npm run build --prefix frontend",
+    "start": "NODE_ENV=production node backend/src/server.js",
+    "dev": "echo \"Terminal 1: cd backend && npm run dev \\n Terminal 2: cd frontend && npm run dev\""
+  }
+}
