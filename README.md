@@ -217,6 +217,35 @@ The code also accepts **`MONGO_URL`** if your template only provides that name �
 
 Redeploy after saving variables.
 
+### If you see `ECONNREFUSED 127.0.0.1:27017` or `localhost:27017`
+
+Railway is using a **local dev URI** (`mongodb://127.0.0.1:27017/...`). Inside the container, **localhost is the app itself**, not MongoDB — so the connection is refused.
+
+**Fix:** In Railway **Variables**, replace `MONGODB_URI` with:
+
+- **MongoDB Atlas:** `mongodb+srv://user:pass@cluster.../dbname?...`, or  
+- **Railway Mongo:** open your **MongoDB** service → copy the **connection URL** meant for apps (often a `mongodb` or `mongodb+srv` host that is **not** `127.0.0.1`).
+
+Do **not** reuse the same `localhost` string from `backend/.env` on your Mac for production.
+
+### Atlas from Railway: `Could not connect… IP whitelist` / `ReplicaSetNoPrimary` / TLS (`tlsv1 alert internal error`)
+
+Railway’s servers use **outbound IPs that change** (and are not your home IP). Atlas will **block** the connection if **Network Access** does not allow that traffic.
+
+1. In **Atlas** → **Network Access** → **Add IP Address** → use **`0.0.0.0/0`** (allow from anywhere) for a demo / PaaS like Railway, then **Save**.  
+   *Tighter options for production: Atlas Private Endpoint, or a fixed-egress IP product — not required for a class project.*
+
+2. Wait **1–2 minutes** after changing the allowlist, then **redeploy** the Railway service.
+
+3. **Connection string** (Railway `MONGODB_URI`):
+   - Use the **`mongodb+srv://…`** string from Atlas → **Connect** → **Drivers** → **Node.js**.
+   - If the database user’s **password** contains `@ : / ? #` etc., **URL-encode** it in the URI (or change the password to a simpler one for the demo user).
+   - No extra spaces or quotes in the Railway variable value.
+
+4. **Database user:** Atlas → **Database Access** — user must have **read/write** (or `readWriteAnyDatabase` on a free tier) and the **auth database** in the URI is usually `authSource=admin` (the Atlas UI string includes this when needed).
+
+The long **OpenSSL / TLS** lines in the log often appear when the server **rejects the TCP session** (e.g. IP blocked) or the handshake never completes — fixing **Network Access** plus a **clean SRV URI** resolves it in most cases.
+
 ---
 
 **Option A — Dockerfile (recommended)**
